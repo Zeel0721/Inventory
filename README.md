@@ -1,0 +1,2 @@
+# Inventory
+Merchant inventory
