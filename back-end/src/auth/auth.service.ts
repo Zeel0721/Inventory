@@ -1,15 +1,17 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { User } from 'src/schema/user.schema';
+import mongoose, { Model } from 'mongoose';
+import { User } from '../schema/user.schema';
 import { compareHash, encrypt } from './utils/bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } from 'src/token';
+import { USER_SERVICE } from '../token';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
+    @Inject(USER_SERVICE) private readonly userService: UserService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -18,19 +20,24 @@ export class AuthService {
   }
 
   async logout(user: any) {
-    console.log(user);
     return await this.userModel.updateOne(
       { email: user.email },
-      { hashedRt: null },
+      { $unset: { hashedRt: '' } },
     );
   }
 
   async validateUser(email: string, password: string) {
     const user = await this.findUserByEmail(email);
     if (!user) return null;
+    if (!user.verified) {
+      {
+        this.userService.sendVerifyEmail(email);
+        throw new BadRequestException('Please verify your email first');
+      }
+    }
     const { password: passwordHash } = user;
     if (!compareHash(password, passwordHash)) return null;
-    return this.generateTokens(user.email, user.username);
+    return this.generateTokens(user._id, user.username, user.email);
   }
 
   async refreshToken(rt: string, email: string) {
@@ -38,17 +45,27 @@ export class AuthService {
     if (!user) return null;
     const { hashedRt } = user;
     if (!compareHash(rt, hashedRt)) return null;
-    return this.generateTokens(user.email, user.username);
+    return this.generateTokens(user._id, user.username, user.email);
   }
 
-  async generateTokens(email: string, username: string) {
+  async generateTokens(
+    id: mongoose.Types.ObjectId,
+    username: string,
+    email: string,
+  ) {
     const accessToken = this.jwtService.sign(
-      { email, username },
-      { secret: ACCESS_TOKEN_SECRET, expiresIn: 60 * 15 },
+      { id, username, email },
+      {
+        secret: process.env.ACCESS_TOKEN_SECRET,
+        expiresIn: '15m',
+      },
     );
     const refreshToken = this.jwtService.sign(
       { email },
-      { secret: REFRESH_TOKEN_SECRET, expiresIn: 60 * 60 * 2 },
+      {
+        secret: process.env.REFRESH_TOKEN_SECRET,
+        expiresIn: '2h',
+      },
     );
     const rtHash = encrypt(refreshToken);
     await this.userModel.updateOne({ email }, { hashedRt: rtHash });

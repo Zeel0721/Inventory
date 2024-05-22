@@ -5,15 +5,14 @@ import {
   Get,
   Inject,
   Param,
-  ParseIntPipe,
   Post,
   Put,
   Req,
 } from '@nestjs/common';
-import { PRODUCT_SERVICE } from 'src/token';
+import { PRODUCT_SERVICE } from '../token';
 import { ProductService } from './product.service';
-import { CreateProductDto } from 'src/DTO/create-product.dto';
-import { UpdateProductDto } from 'src/DTO/update-product.dto';
+import { CreateProductDto } from '../DTO/create-product.dto';
+import { UpdateProductDto } from '../DTO/update-product.dto';
 import { Request } from 'express';
 
 @Controller('product')
@@ -28,8 +27,8 @@ export class ProductController {
   }
 
   @Get('findall')
-  getAll() {
-    return this.productService.getAll();
+  getAll(@Req() req: Request) {
+    return this.productService.getAll(req.user);
   }
 
   @Get('findone/:id')
@@ -39,10 +38,11 @@ export class ProductController {
 
   @Put('updateproducts/:id')
   updateProduct(
+    @Req() req: Request,
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
   ) {
-    return this.productService.update(id, updateProductDto);
+    return this.productService.update(req.user, id, updateProductDto);
   }
 
   @Delete('deleteall')
@@ -51,7 +51,7 @@ export class ProductController {
   }
 
   @Delete('deleteone/:id')
-  deleteone(@Param('id') id: string) {
-    return this.productService.deleteone(id);
+  deleteone(@Req() req: Request, @Param('id') id: string) {
+    return this.productService.deleteone(req.user, id);
   }
 }

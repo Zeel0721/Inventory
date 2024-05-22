@@ -1,17 +1,18 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { CreateOrderlistDto } from 'src/DTO/create-orderlist.dto';
-import { UpdateOrderlistDto } from 'src/DTO/update-orderlist.dto';
-import { populateOption } from 'src/product/product.service';
-import { Orderlist } from 'src/schema/order.schema';
-import { User } from 'src/schema/user.schema';
+import { CreateOrderlistDto } from '../DTO/create-orderlist.dto';
+import { populateOption } from '../product/product.service';
+import { Orderlist } from '../schema/order.schema';
+import { Product } from '../schema/product.schema';
+import { User } from '../schema/user.schema';
 
 @Injectable()
 export class OrderService {
   constructor(
     @InjectModel(Orderlist.name) private orderListModel: Model<Orderlist>,
     @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(Product.name) private productModel: Model<Product>,
   ) {}
 
   async create(
@@ -24,11 +25,19 @@ export class OrderService {
         ...createorderlistDto,
         createdBy: userId._id,
       });
+      createdOrderlist.orderdetail.map(async (order) => {
+        await this.productModel.updateOne(
+          { productsname: order.productname },
+          { $inc: { quantity: -order.quantity } },
+        );
+      });
       if (!createdOrderlist) {
         throw new HttpException(' products Not created', HttpStatus.NOT_FOUND);
       }
       await createdOrderlist.save();
-      return await this.orderListModel.find().populate(populateOption);
+      return await this.orderListModel
+        .find({ createdBy: user.id })
+        .populate(populateOption);
     } catch (error) {
       throw new HttpException(
         'Error creating product',
@@ -37,9 +46,16 @@ export class OrderService {
     }
   }
 
-  async findAll(): Promise<Orderlist[]> {
+  async addInvoice(image: Express.Multer.File, id: string) {
+    await this.orderListModel.findById(id).updateOne({ invoice: image.buffer });
+    return 'Invoice added successfully';
+  }
+
+  async findAll(user: any): Promise<Orderlist[]> {
     try {
-      return await this.orderListModel.find().populate(populateOption);
+      return await this.orderListModel
+        .find({ createdBy: user.id })
+        .populate(populateOption);
     } catch (error) {
       throw new HttpException(
         'Error getting products',
@@ -54,52 +70,6 @@ export class OrderService {
     } catch (error) {
       throw new HttpException(
         'Error getting products',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
-
-  async update(
-    id: string,
-    updateorderlistDto: UpdateOrderlistDto,
-  ): Promise<Orderlist[]> {
-    try {
-      const existingorderlist = await this.orderListModel
-        .findByIdAndUpdate(id)
-        .exec();
-      if (!existingorderlist) {
-        throw new HttpException('Product not found', HttpStatus.NOT_FOUND);
-      }
-      Object.assign(existingorderlist, updateorderlistDto);
-      await existingorderlist.save();
-      return await this.orderListModel.find().populate(populateOption);
-    } catch (error) {
-      throw new HttpException(
-        'Error updating product ',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
-
-  async removeAll() {
-    try {
-      await this.orderListModel.deleteMany().exec();
-      return 'All order details has been deleted';
-    } catch (error) {
-      throw new HttpException(
-        'Error deleting products',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
-
-  async remove(id: string): Promise<Orderlist[]> {
-    try {
-      await this.orderListModel.findByIdAndDelete(id).exec();
-      return await this.orderListModel.find().populate(populateOption);
-    } catch (error) {
-      throw new HttpException(
-        'Error deleting products',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

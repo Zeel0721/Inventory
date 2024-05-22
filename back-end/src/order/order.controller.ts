@@ -1,19 +1,19 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   Inject,
   Param,
   Post,
-  Put,
   Req,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ORDER_SERVICE } from 'src/token';
+import { ORDER_SERVICE } from '../token';
 import { OrderService } from './order.service';
-import { CreateOrderlistDto } from 'src/DTO/create-orderlist.dto';
-import { UpdateOrderlistDto } from 'src/DTO/update-orderlist.dto';
+import { CreateOrderlistDto } from '../DTO/create-orderlist.dto';
 import { Request } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('order')
 export class OrderController {
@@ -26,31 +26,22 @@ export class OrderController {
     return this.orderService.create(req.user, createorderlistDto);
   }
 
+  @Post('invoice/:id')
+  @UseInterceptors(FileInterceptor('image'))
+  addInvoice(
+    @UploadedFile() image: Express.Multer.File,
+    @Param('id') id: string,
+  ) {
+    return this.orderService.addInvoice(image, id);
+  }
+
   @Get('getall')
-  findAll() {
-    return this.orderService.findAll();
+  findAll(@Req() req: Request) {
+    return this.orderService.findAll(req.user);
   }
 
   @Get('getone/:id')
   findOne(@Param('id') id: string) {
     return this.orderService.findOne(id);
-  }
-
-  @Put('updateorderlist/:id')
-  updateProduct(
-    @Param('id') id: string,
-    @Body() updateorderlistDto: UpdateOrderlistDto,
-  ) {
-    return this.orderService.update(id, updateorderlistDto);
-  }
-
-  @Delete('deleteall')
-  removeAll() {
-    return this.orderService.removeAll();
-  }
-
-  @Delete('deleteone/:id')
-  remove(@Param('id') id: string) {
-    return this.orderService.remove(id);
   }
 }

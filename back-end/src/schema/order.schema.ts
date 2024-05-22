@@ -1,14 +1,23 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Blob } from 'buffer';
 import mongoose from 'mongoose';
-import { UserDto } from 'src/DTO/user.dto';
+import { UserDto } from '../DTO/user.dto';
+
+export type OrderDetail = {
+  productname: string;
+  quantity: number;
+};
 
 @Schema({ timestamps: true })
 export class Orderlist {
   @Prop()
   companyname: string;
 
-  @Prop([String])
-  productname: string[];
+  @Prop([])
+  orderdetail: OrderDetail[];
+
+  @Prop()
+  invoice?: Blob;
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
   createdBy?: UserDto;

@@ -1,12 +1,15 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { CreateProductDto } from 'src/DTO/create-product.dto';
-import { UpdateProductDto } from 'src/DTO/update-product.dto';
-import { Product } from 'src/schema/product.schema';
-import { User } from 'src/schema/user.schema';
+import { CreateProductDto } from '../DTO/create-product.dto';
+import { UpdateProductDto } from '../DTO/update-product.dto';
+import { Product } from '../schema/product.schema';
+import { User } from '../schema/user.schema';
 
-export const populateOption = { path: 'createdBy', select: ['username'] };
+export const populateOption = {
+  path: 'createdBy',
+  select: ['username'],
+};
 
 @Injectable()
 export class ProductService {
@@ -26,7 +29,9 @@ export class ProductService {
         throw new HttpException(' products Not created', HttpStatus.NOT_FOUND);
       }
       await createdProduct.save();
-      return await this.productModel.find().populate(populateOption);
+      return await this.productModel
+        .find({ createdBy: user.id })
+        .populate(populateOption);
     } catch (error) {
       throw new HttpException(
         'Error creating product',
@@ -35,8 +40,10 @@ export class ProductService {
     }
   }
 
-  async getAll() {
-    const findall = await this.productModel.find().populate(populateOption);
+  async getAll(user: any) {
+    const findall = await this.productModel
+      .find({ createdBy: user.id })
+      .populate(populateOption);
     try {
       if (!findall) {
         throw new HttpException('No products found', HttpStatus.NOT_FOUND);
@@ -68,6 +75,7 @@ export class ProductService {
   }
 
   async update(
+    user: any,
     id: string,
     updateProductDto: UpdateProductDto,
   ): Promise<Product[]> {
@@ -80,7 +88,9 @@ export class ProductService {
       }
       Object.assign(existingProduct, updateProductDto);
       await existingProduct.save();
-      return await this.productModel.find().populate(populateOption);
+      return await this.productModel
+        .find({ createdBy: user.id })
+        .populate(populateOption);
     } catch (error) {
       throw new HttpException(
         'Error updating product ',
@@ -104,13 +114,15 @@ export class ProductService {
     }
   }
 
-  async deleteone(id: string): Promise<Product[]> {
+  async deleteone(user: any, id: string): Promise<Product[]> {
     try {
       const deleteone = await this.productModel.findByIdAndDelete(id).exec();
       if (!deleteone) {
         throw new HttpException('No products found', HttpStatus.NOT_FOUND);
       }
-      return await this.productModel.find().populate(populateOption);
+      return await this.productModel
+        .find({ createdBy: user.id })
+        .populate(populateOption);
     } catch (error) {
       throw new HttpException(
         'Error deleting product',
