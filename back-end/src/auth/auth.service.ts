@@ -31,7 +31,7 @@ export class AuthService {
     if (!user) return null;
     if (!user.verified) {
       {
-        this.userService.sendVerifyEmail(email);
+        await this.userService.sendVerifyEmail(email);
         throw new BadRequestException('Please verify your email first');
       }
     }
