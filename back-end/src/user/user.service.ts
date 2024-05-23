@@ -3,7 +3,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, MongooseError, SaveOptions } from 'mongoose';
+import { Model } from 'mongoose';
 import { UserDto } from '../DTO/user.dto';
 import { encrypt } from '../auth/utils/bcrypt';
 import { User } from '../schema/user.schema';
