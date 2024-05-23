@@ -76,7 +76,7 @@ export class UserService {
         expiresIn: '10m',
       },
     );
-    const url = `https://inventory-vert-nu.vercel.app/user/resetpassword?token=${emailToken}`;
+    const url = `http://localhost:5173/resetpassword?token=${emailToken}`;
 
     this.mailerService.sendMail({
       from: process.env.EMAIL,
