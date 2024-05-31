@@ -25,4 +25,8 @@ export class CreateOrderlistDto {
   @ValidateNested({ each: true })
   @Type(() => OrderDetail)
   orderdetail: OrderDetail[];
+
+  @IsString()
+  @IsNotEmpty()
+  date: string;
 }

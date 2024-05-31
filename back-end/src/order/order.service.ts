@@ -20,6 +20,7 @@ export class OrderService {
     createorderlistDto: CreateOrderlistDto,
   ): Promise<Orderlist[]> {
     try {
+      const date = new Date(createorderlistDto.date);
       const userId = await this.userModel.findOne({ email: user.email });
       const createdOrderlist = new this.orderListModel({
         ...createorderlistDto,

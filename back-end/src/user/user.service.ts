@@ -38,7 +38,7 @@ export class UserService {
       { email },
       { secret: this.configService.get('VERIFY_EMAIL_TOKEN'), expiresIn: '1h' },
     );
-    const url = `https://inventory-vert-nu.vercel.app/user/verifyemail/${emailToken}`;
+    const url = `http://localhost:3000/user/verifyemail/${emailToken}`;
 
     this.mailerService.sendMail({
       from: process.env.EMAIL,

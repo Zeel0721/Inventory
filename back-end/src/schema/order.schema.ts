@@ -8,13 +8,16 @@ export type OrderDetail = {
   quantity: number;
 };
 
-@Schema({ timestamps: true })
+@Schema()
 export class Orderlist {
   @Prop()
   companyname: string;
 
   @Prop([])
   orderdetail: OrderDetail[];
+
+  @Prop()
+  date: Date;
 
   @Prop()
   invoice?: Blob;
