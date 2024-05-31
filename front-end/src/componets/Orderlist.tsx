@@ -46,6 +46,7 @@ const Orderlist = () => {
   const [createOrderModalVisible, setCreateOrderModalVisible] =
     useState<boolean>(false);
   const [selectedOrder, setSelectedOrder] = useState<any>();
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [maxOrder, setMaxOrder] = useState<any>({});
   const screens = useBreakpoint();
   const [form] = Form.useForm();
@@ -71,12 +72,14 @@ const Orderlist = () => {
           (product: any) => product.productsname === order.productname
         )["quantity"],
       }));
+      setSelectedProducts((prev: any) => [...prev, order.productname]);
     });
     form.setFieldsValue(record);
     setCreateOrderModalVisible(true);
   };
 
   const handleCreateOrderCancel = () => {
+    setSelectedProducts([]);
     setMaxOrder({});
     form.resetFields();
     setCreateOrderModalVisible(false);
@@ -116,6 +119,7 @@ const Orderlist = () => {
       await createOrderlist(newOrderlistData).unwrap();
       message.success("Order list created successfully.");
       setCreateOrderModalVisible(false);
+      setSelectedProducts([]);
       setMaxOrder({});
       form.resetFields();
       refetch();
@@ -333,12 +337,14 @@ const Orderlist = () => {
                               (product: any) => product.productsname === value
                             )["quantity"],
                           }));
-                          console.log(maxOrder);
+                          setSelectedProducts((prev: any) => [...prev, value]);
                         }}
                       >
                         {products?.map(
                           (product: any) =>
-                            !maxOrder.hasOwnProperty(product.productname) && (
+                            !selectedProducts.includes(
+                              product.productsname
+                            ) && (
                               <Option
                                 key={product.productsname}
                                 value={product.productsname}
