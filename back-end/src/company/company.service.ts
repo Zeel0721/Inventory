@@ -1,8 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { CompanyDto } from 'src/DTO/company.dto';
-import { Company } from 'src/schema/company.schema';
+import { CompanyDto } from '../DTO/company.dto';
+import { Company } from '../schema/company.schema';
 
 @Injectable()
 export class CompanyService {

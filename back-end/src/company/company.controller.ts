@@ -9,10 +9,10 @@ import {
   Put,
   Req,
 } from '@nestjs/common';
-import { COMPANY_SERVICE } from 'src/token';
+import { COMPANY_SERVICE } from '../token';
 import { CompanyService } from './company.service';
 import { Request } from 'express';
-import { CompanyDto } from 'src/DTO/company.dto';
+import { CompanyDto } from '../DTO/company.dto';
 
 @Controller('company')
 export class CompanyController {
